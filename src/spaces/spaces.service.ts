@@ -29,7 +29,6 @@ export class SpacesService {
       await this.spaceRepository.save(space);
       return space;
     } catch (error) {
-      console.log(error);
       this.handleDbException(error);
     }
   }
