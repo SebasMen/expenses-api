@@ -7,11 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
+import { validate as isUUID } from 'uuid';
 
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
 
 import { Space } from './entities/space.entity';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class SpacesService {
@@ -32,12 +34,34 @@ export class SpacesService {
     }
   }
 
-  findAll() {
-    return `This action returns all spaces`;
+  async findAll(pagination: PaginationDto) {
+    const { limit = 10, offset = 0 } = pagination;
+
+    return await this.spaceRepository.find({
+      take: limit,
+      skip: offset,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} space`;
+  async findOne(term: string) {
+    let space: Space;
+
+    if (isUUID(term)) {
+      space = await this.spaceRepository.findOneBy({ id: term });
+    } else {
+      const queryBuilder = this.spaceRepository.createQueryBuilder();
+      space = await queryBuilder
+        .where(`UPPER(name)=:name`, {
+          name: term.toUpperCase(),
+        })
+        .getOne();
+    }
+
+    if (!space) {
+      throw new BadRequestException(`Space with id ${term} not found`);
+    }
+
+    return space;
   }
 
   update(id: number, updateSpaceDto: UpdateSpaceDto) {

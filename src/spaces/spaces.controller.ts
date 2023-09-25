@@ -6,10 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
+
 import { SpacesService } from './spaces.service';
+
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
+import { PaginationDto } from '../common/dtos/pagination.dto';
 
 @Controller('spaces')
 export class SpacesController {
@@ -21,13 +25,13 @@ export class SpacesController {
   }
 
   @Get()
-  findAll() {
-    return this.spacesService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.spacesService.findAll(paginationDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.spacesService.findOne(+id);
+  @Get(':term')
+  findOne(@Param('term') term: string) {
+    return this.spacesService.findOne(term);
   }
 
   @Patch(':id')
