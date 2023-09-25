@@ -11,9 +11,9 @@ import { validate as isUUID } from 'uuid';
 
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 import { Space } from './entities/space.entity';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class SpacesService {
@@ -64,12 +64,29 @@ export class SpacesService {
     return space;
   }
 
-  update(id: number, updateSpaceDto: UpdateSpaceDto) {
-    return `This action updates a #${id} space`;
+  async update(id: string, updateSpaceDto: UpdateSpaceDto) {
+    const space = await this.spaceRepository.preload({
+      id,
+      ...updateSpaceDto,
+    });
+
+    if (!space) {
+      throw new BadRequestException(`Space with id ${id} not found`);
+    }
+
+    try {
+      await this.spaceRepository.save(space);
+      return space;
+    } catch (error) {
+      this.handleDbException(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} space`;
+  async remove(id: string) {
+    const space = await this.findOne(id);
+
+    await this.spaceRepository.remove(space);
+    return { message: 'Space deleted successfully' };
   }
 
   private handleDbException(error: any) {
